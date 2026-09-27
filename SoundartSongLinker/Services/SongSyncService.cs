@@ -39,6 +39,12 @@ public sealed class SongSyncService
 
     public void Sync()
     {
+        if (string.IsNullOrWhiteSpace(_config.BeatSaberPath) ||
+            string.IsNullOrWhiteSpace(_config.SoundartPath))
+        {
+            throw new InvalidOperationException("同期する前に初期設定で両方のパスを指定してください。");
+        }
+
         string sourceRoot = 
             Path.GetFullPath(_config.BeatSaberPath);
 

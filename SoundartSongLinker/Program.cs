@@ -60,37 +60,43 @@ internal class Program
         steamService =
             new SteamLibraryService();
 
-        var menu = AnsiConsole.Prompt(
-            new SelectionPrompt<string>()
-                .Title("[underline green]メニューを選択してください:[/]")
-                .AddChoices(["初期設定 / パス変更", "差分同期", "リンク解除", "Steamライブラリ情報表示", "終了"]));
-
-        try
+        while (true)
         {
+            var menu = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title("[underline green]メニューを選択してください:[/]")
+                    .AddChoices(["初期設定 / パス変更", "差分同期", "リンク解除", "Steamライブラリ情報表示", "終了"]));
 
-            switch (menu)
+            try
             {
-                case "初期設定 / パス変更":
-                    Setup();
-                    break;
-                case "差分同期":
-                    service.Sync();
-                    break;
-                case "リンク解除":
-                    service.UnlinkAll();
-                    break;
-                case "Steamライブラリ情報表示":
-                    DisplaySteamLibraryInfo();
-                    break;
-                case "終了":
-                default:
-                    return;
-            }
 
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"エラーが発生しました: {ex.Message}");
+                switch (menu)
+                {
+                    case "初期設定 / パス変更":
+                        AnsiConsole.Clear();
+                        Setup();
+                        break;
+                    case "差分同期":
+                        AnsiConsole.Clear();
+                        service.Sync();
+                        break;
+                    case "リンク解除":
+                        AnsiConsole.Clear();
+                        service.UnlinkAll();
+                        break;
+                    case "Steamライブラリ情報表示":
+                        DisplaySteamLibraryInfo();
+                        break;
+                    case "終了":
+                    default:
+                        return;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"エラーが発生しました: {ex.Message}");
+            }
         }
     }
 
@@ -104,8 +110,11 @@ internal class Program
             throw new InvalidOperationException("設定情報が初期化されていません。");
         }
 
-        var beatSaber = steamService.FindBeatSaber();
-        string defaultBeatSaberPath = string.Empty;
+        var steam = steamService ?? throw new InvalidOperationException("Steamライブラリサービスが初期化されていません。");
+        var beatSaber = steam.FindBeatSaber();
+        string defaultBeatSaberPath = Directory.Exists(config.BeatSaberPath)
+            ? config.BeatSaberPath
+            : string.Empty;
 
         if (beatSaber is not null)
         {
@@ -121,8 +130,10 @@ internal class Program
             }   
         }
 
-        var soundart = steamService.FindSoundart();
-        string defaultSoundartPath = string.Empty;
+        var soundart = steam.FindSoundart();
+        string defaultSoundartPath = Directory.Exists(config.SoundartPath)
+            ? config.SoundartPath
+            : string.Empty;
 
         if (soundart is not null)
         {
@@ -194,6 +205,7 @@ internal class Program
         }
 
         var libraries = steamService.GetSteamLibraries();
+        AnsiConsole.Clear();
         AnsiConsole.MarkupLine("[underline green]Steamライブラリ情報[/]");
 
         foreach (var library in libraries)

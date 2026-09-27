@@ -46,12 +46,18 @@ public sealed class SteamLibraryService
                     continue;
                 }
 
-                path = Path.GetFullPath(path);
-
-                if (Directory.Exists(path) &&
-                    Directory.Exists(Path.Combine(path, "steamapps")))
+                try
                 {
-                    return path;
+                    path = Path.GetFullPath(path);
+
+                    if (Directory.Exists(Path.Combine(path, "steamapps")))
+                    {
+                        return path;
+                    }
+                }
+                catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+                {
+                    Console.WriteLine($"[警告]Steamのインストールパス: {path}, エラー: {ex.Message}");
                 }
             }
         }
@@ -99,8 +105,17 @@ public sealed class SteamLibraryService
             return libraries.ToList();
         }
 
-        var root =
-            SteamVdfParser.ParseFile(vdfPath);
+        Dictionary<string, object> root;
+
+        try
+        {
+            root = SteamVdfParser.ParseFile(vdfPath);
+        }
+        catch (Exception ex) when (ex is FormatException or IOException or UnauthorizedAccessException)
+        {
+            Console.WriteLine($"[警告]ライブラリ設定ファイル: {vdfPath}, エラー: {ex.Message}");
+            return libraries.ToList();
+        }
 
         var folders =
             SteamVdfParser.GetObject(root, "libraryfolders");
@@ -249,8 +264,8 @@ public sealed class SteamLibraryService
         return new SteamGame
         {
             AppId = appId,
-            Name = name,
-            InstallDirectory = installDir,
+            Name = name ?? installDir,
+            InstallDirectory = directory,
             LibraryPath = library
         };
     }

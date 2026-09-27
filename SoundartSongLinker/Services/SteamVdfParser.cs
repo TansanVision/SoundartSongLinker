@@ -150,6 +150,10 @@ public sealed class SteamVdfParser
 
                 tokens.Add(sb.ToString());
             }
+            else
+            {
+                tokens.Add(token);
+            }
         }
 
         return tokens;
