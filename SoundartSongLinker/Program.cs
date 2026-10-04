@@ -57,6 +57,8 @@ internal class Program
                 config,
                 configPath);
 
+        service.RecoverStaleStaging();
+
         steamService =
             new SteamLibraryService();
 
